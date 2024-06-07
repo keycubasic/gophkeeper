@@ -1,0 +1,172 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "cmd/proto/gophkeeper.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "GophKeeperService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/ping": {
+      "get": {
+        "operationId": "GophKeeperService_Ping",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gophkeeperPingResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "GophKeeperService"
+        ]
+      }
+    },
+    "/api/user/data": {
+      "get": {
+        "operationId": "GophKeeperService_GetData",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gophkeeperGetDataResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "site",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "GophKeeperService"
+        ]
+      },
+      "post": {
+        "operationId": "GophKeeperService_StoreData",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gophkeeperStoreDataResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/gophkeeperStoreDataRequest"
+            }
+          }
+        ],
+        "tags": [
+          "GophKeeperService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "gophkeeperCredentials": {
+      "type": "object",
+      "properties": {
+        "login": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      }
+    },
+    "gophkeeperGetDataResponse": {
+      "type": "object",
+      "properties": {
+        "credentials": {
+          "$ref": "#/definitions/gophkeeperCredentials"
+        }
+      }
+    },
+    "gophkeeperPingResponse": {
+      "type": "object"
+    },
+    "gophkeeperStoreDataRequest": {
+      "type": "object",
+      "properties": {
+        "site": {
+          "type": "string"
+        },
+        "credentials": {
+          "$ref": "#/definitions/gophkeeperCredentials"
+        }
+      }
+    },
+    "gophkeeperStoreDataResponse": {
+      "type": "object",
+      "properties": {
+        "info": {
+          "type": "string"
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    }
+  }
+}

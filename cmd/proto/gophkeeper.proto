@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package gophkeeper;
+
+option go_package = "internal/grpc/proto";
+
+import "google/api/annotations.proto"; 
+
+message PingRequest {}
+
+message PingResponse {}
+
+message Credentials {
+    string login = 1;
+    string password = 2;
+}
+
+message StoreDataRequest {
+    string site = 1;
+    Credentials credentials = 2;
+}
+
+message StoreDataResponse {
+    string info = 1;
+}
+
+message GetDataRequest {
+    string site = 1; // Mapped to URL query parameter `site`.
+}
+
+message GetDataResponse {
+    Credentials credentials = 1;
+}
+
+service GophKeeperService {
+    rpc Ping(PingRequest) returns (PingResponse) {
+        option (google.api.http) = {
+            get: "/api/ping"
+        };
+    }
+    rpc StoreData(StoreDataRequest) returns (StoreDataResponse) {
+        option (google.api.http) = {
+            post: "/api/user/data"
+            body: "*"
+        };
+    }
+    rpc GetData(GetDataRequest) returns (GetDataResponse) {
+        option (google.api.http) = {
+            get: "/api/user/data"
+        };
+    }
+}
