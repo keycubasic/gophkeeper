@@ -16,7 +16,7 @@
     "application/json"
   ],
   "paths": {
-    "/api/auth": {
+    "/api/auth/login": {
       "post": {
         "operationId": "AuthService_LoginUser",
         "responses": {
@@ -48,7 +48,7 @@
         ]
       }
     },
-    "/api/reg": {
+    "/api/auth/reg": {
       "post": {
         "operationId": "AuthService_RegisterUser",
         "responses": {

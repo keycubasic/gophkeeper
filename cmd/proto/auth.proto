@@ -30,13 +30,13 @@ message LoginUserResponse {
 service AuthService {
     rpc RegisterUser(RegisterUserRequest) returns (RegisterUserResponse) {
         option (google.api.http) = {
-            post: "/api/reg"
+            post: "/api/auth/reg"
             body: "*"
         };
     }
     rpc LoginUser(LoginUserRequest) returns (LoginUserResponse) {
         option (google.api.http) = {
-            post: "/api/auth"
+            post: "/api/auth/login"
             body: "*"
         };
     }

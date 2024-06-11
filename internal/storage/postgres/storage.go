@@ -1,13 +1,20 @@
+// Package postgre contains functions for working with the PostgreSQL database.
 package postgres
 
 import (
 	"context"
 	"embed"
+	"errors"
 	"fmt"
 
+	sq "github.com/Masterminds/squirrel"
+	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5/pgconn"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
 	"github.com/keycubasic/gophkeeper/internal/config"
+	"github.com/keycubasic/gophkeeper/internal/model"
+	"github.com/keycubasic/gophkeeper/internal/storage"
 	"github.com/pressly/goose/v3"
 	"github.com/rs/zerolog/log"
 	glog "go.finelli.dev/gooseloggers/zerolog"
@@ -59,18 +66,50 @@ func (s Storage) PingContext(ctx context.Context) error {
 	return s.db.PingContext(ctx)
 }
 
-// RegisterUser registers new user and returns user Id.
+// RegisterUser registers new user and returns user ID.
 func (s Storage) RegisterUser(ctx context.Context, username, hashedPassword string) (int, error) {
-	// TODO: implement RegisterUser
+	sql := sq.Insert("users").Columns("username", "hash").Values(username, hashedPassword).
+		Suffix("RETURNING user_id").RunWith(s.db).PlaceholderFormat(sq.Dollar)
 
-	return 0, nil
+	var userID int
+	err := sql.QueryRowContext(ctx).Scan(&userID)
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgerrcode.IsIntegrityConstraintViolation(pgErr.Code) {
+			return 0, fmt.Errorf("storage register user: %w", storage.ErrUniqueViolation)
+		}
+
+		return 0, fmt.Errorf("storage register user: %w", err)
+	}
+
+	return userID, nil
 }
 
 // FindUser finds user.
-func (s Storage) FindUser(ctx context.Context, username string) (int, error) {
-	// TODO: implement FindUser
+func (s Storage) FindUser(ctx context.Context, username string) (*model.User, error) {
+	sql := sq.Select("*").From("users").Where(sq.Eq{"username": username})
+	rows, err := sql.RunWith(s.db).PlaceholderFormat(sq.Dollar).QueryContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("storage find user query: %w", err)
+	}
 
-	return 0, nil
+	user := new(model.User)
+	for rows.Next() {
+		err := rows.Scan(&user.ID, &user.Username, &user.HashedPassword)
+		if err != nil {
+			return nil, fmt.Errorf("storage scan user row: %w", err)
+		}
+	}
+
+	if rows.Err() != nil {
+		return nil, fmt.Errorf("storage find user rows: %w", err)
+	}
+
+	if user.ID == 0 {
+		return nil, fmt.Errorf("storage find user: %w", errors.New("user not found"))
+	}
+
+	return user, nil
 }
 
 // Close closes the connection to the database.

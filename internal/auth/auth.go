@@ -4,13 +4,19 @@ package auth
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt"
+	middleware "github.com/grpc-ecosystem/go-grpc-middleware/v2"
 	"github.com/keycubasic/gophkeeper/internal/model"
-	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 )
+
+const contextKey = "username"
 
 // JWTManager stores secret key and token duration.
 type JWTManager struct {
@@ -70,7 +76,7 @@ func (manager *JWTManager) Verify(accessToken string) (*UserClaims, error) {
 
 // AuthInterceptor stores JWTManager.
 type AuthInterceptor struct {
-	jwtManager *JWTManager
+	JwtManager *JWTManager
 }
 
 // NewAuthInterceptor creates new AuthInterceptor.
@@ -86,10 +92,61 @@ func (interceptor *AuthInterceptor) Unary() grpc.UnaryServerInterceptor {
 		info *grpc.UnaryServerInfo,
 		handler grpc.UnaryHandler,
 	) (interface{}, error) {
-		log.Print("--> unary interceptor: ", info.FullMethod)
+		if strings.Contains(info.FullMethod, "AuthService") {
+			return handler(ctx, req)
+		}
 
-		// TODO: implement authorization
+		newCtx, err := interceptor.authorize(ctx)
+		if err != nil {
+			return nil, err
+		}
 
-		return handler(ctx, req)
+		return handler(newCtx, req)
 	}
+}
+
+// Stream returns StreamServerInterceptor.
+func (interceptor *AuthInterceptor) Stream() grpc.StreamServerInterceptor {
+	return func(
+		srv interface{},
+		stream grpc.ServerStream,
+		info *grpc.StreamServerInfo,
+		handler grpc.StreamHandler,
+	) error {
+		if strings.Contains(info.FullMethod, "AuthService") {
+			return handler(srv, stream)
+		}
+
+		newCtx, err := interceptor.authorize(stream.Context())
+		if err != nil {
+			return err
+		}
+
+		wrapped := middleware.WrapServerStream(stream)
+		wrapped.WrappedContext = newCtx
+
+		return handler(srv, stream)
+	}
+}
+
+func (interceptor *AuthInterceptor) authorize(ctx context.Context) (context.Context, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, status.Errorf(codes.Unauthenticated, "metadata is not provided")
+	}
+
+	values := md["authorization"]
+	if len(values) == 0 {
+		return nil, status.Errorf(codes.Unauthenticated, "authorization token is not provided")
+	}
+
+	accessToken := values[0]
+	claims, err := interceptor.JwtManager.Verify(accessToken)
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "access token is invalid: %v", err)
+	}
+
+	ctx = context.WithValue(ctx, contextKey, claims.Username)
+
+	return ctx, nil
 }

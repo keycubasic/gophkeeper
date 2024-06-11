@@ -1,4 +1,4 @@
-// Package handler contains handlers and starts the server.
+// Package server contains logging interceptor, registration of servers and starts the main server.
 package server
 
 import (
@@ -24,6 +24,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
+	"github.com/keycubasic/gophkeeper/internal/auth"
 	apb "github.com/keycubasic/gophkeeper/internal/auth/proto"
 	asrv "github.com/keycubasic/gophkeeper/internal/auth/server"
 	gpb "github.com/keycubasic/gophkeeper/internal/grpc/proto"
@@ -74,16 +75,16 @@ func RegisterGrpcServer(ctx context.Context, cfg *config.Config, app app.Applica
 
 	logger := zerolog.New(os.Stderr)
 	opts := []logging.Option{logging.WithTimestampFormat(time.RFC3339)}
+	interceptor := auth.NewAuthInterceptor(as.JwtManager)
 
 	s := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
 			logging.UnaryServerInterceptor(interceptorLogger(logger), opts...),
-		// auth.UnaryServerInterceptor(authFunc),
-
+			grpc.UnaryServerInterceptor(interceptor.Unary()),
 		),
 		grpc.ChainStreamInterceptor(
 			logging.StreamServerInterceptor(interceptorLogger(logger), opts...),
-		// auth.StreamServerInterceptor(authFunc),
+			grpc.StreamServerInterceptor(interceptor.Stream()),
 		),
 	)
 	apb.RegisterAuthServiceServer(s, as)

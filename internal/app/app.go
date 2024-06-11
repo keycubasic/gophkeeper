@@ -18,7 +18,7 @@ type Application interface {
 	// RegisterUser registers new user and returns user Id.
 	RegisterUser(ctx context.Context, username, password string) (*model.User, error)
 	// IsCorrectPassword checks password.
-	IsCorrectPassword(user *model.User, password string) bool
+	IsCorrectPassword(hashedPassword, password string) bool
 	// FindUser finds user.
 	FindUser(ctx context.Context, username string) (*model.User, error)
 }
@@ -64,15 +64,12 @@ func (app *App) RegisterUser(ctx context.Context, username string, password stri
 }
 
 // IsCorrectPassword checks password.
-func (app *App) IsCorrectPassword(user *model.User, password string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(user.HashedPassword), []byte(password))
+func (app *App) IsCorrectPassword(hashedPassword, password string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 	return err == nil
 }
 
 // FindUser finds user.
 func (app *App) FindUser(ctx context.Context, username string) (*model.User, error) {
-
-	// TODO: implement FindUser
-
-	return nil, nil
+	return app.db.FindUser(ctx, username)
 }

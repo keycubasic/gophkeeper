@@ -2,7 +2,7 @@
 -- +goose StatementBegin
 CREATE TABLE IF NOT EXISTS users (
     user_id INT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    login VARCHAR(255) NOT NULL UNIQUE,
+    username VARCHAR(255) NOT NULL UNIQUE,
     hash VARCHAR(255) NOT NULL
 );
 -- +goose StatementEnd
