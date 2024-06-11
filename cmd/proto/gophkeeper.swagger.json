@@ -1,8 +1,13 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "cmd/proto/gophkeeper.proto",
-    "version": "version not set"
+    "title": "GophKeeper Password Manager",
+    "version": "1.0",
+    "contact": {
+      "name": "keycubasic",
+      "url": "https://github.com/keycubasic",
+      "email": "keycube@yandex.ru"
+    }
   },
   "tags": [
     {

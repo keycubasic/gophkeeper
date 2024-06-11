@@ -14,6 +14,7 @@ protoc -I . ^
 
 protoc -I . ^
     -I %GOPATH%/pkg/mod/github.com/googleapis/googleapis@v0.0.0-20240605231841-21c839628513 ^
+    -I %GOPATH%/pkg/mod/github.com/grpc-ecosystem/grpc-gateway/v2@v2.20.0 ^
     --go_out . ^
     --go_opt paths=import ^
     --go-grpc_out . ^

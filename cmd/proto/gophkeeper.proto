@@ -4,7 +4,22 @@ package gophkeeper;
 
 option go_package = "internal/grpc/proto";
 
-import "google/api/annotations.proto"; 
+import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+    info: {
+        title: "GophKeeper Password Manager";
+        version: "1.0";
+        description: "";
+        contact: {
+            name: "keycubasic";
+            url: "https://github.com/keycubasic";
+            email: "keycube@yandex.ru";
+        };
+    };
+};
 
 message PingRequest {}
 
