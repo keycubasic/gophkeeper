@@ -112,6 +112,41 @@ func (s Storage) FindUser(ctx context.Context, username string) (*model.User, er
 	return user, nil
 }
 
+// StoreData stores data to database.
+func (s Storage) StoreData(ctx context.Context, creds []model.Creds) error {
+	sql := `INSERT INTO creds (user_id, user_site, user_login, user_password, metadata)
+	 		VALUES (:user_id, :user_site, :user_login, :user_password, :metadata)`
+	if _, err := s.db.NamedExecContext(ctx, sql, creds); err != nil {
+		return fmt.Errorf("stogare store data: %w", err)
+	}
+
+	return nil
+}
+
+// GetData gets data from database.
+func (s Storage) GetData(ctx context.Context, userID int, site string) (*model.Creds, error) {
+	sql := sq.Select("user_login, user_password, metadata").
+		From("creds").Where(sq.Eq{"user_id": userID}, sq.Eq{"site": site})
+	rows, err := sql.RunWith(s.db).PlaceholderFormat(sq.Dollar).QueryContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("storage get data query: %w", err)
+	}
+
+	creds := new(model.Creds)
+	for rows.Next() {
+		err := rows.Scan(&creds.Login, &creds.Password, &creds.Metadata)
+		if err != nil {
+			return nil, fmt.Errorf("storage get data scan row: %w", err)
+		}
+	}
+
+	if rows.Err() != nil {
+		return nil, fmt.Errorf("storage get data rows: %w", err)
+	}
+
+	return creds, nil
+}
+
 // Close closes the connection to the database.
 func (s Storage) Close() error {
 	return s.db.Close()

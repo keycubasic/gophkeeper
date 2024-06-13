@@ -21,6 +21,10 @@ type Database interface {
 	RegisterUser(ctx context.Context, username, hashedPassword string) (int, error)
 	// FindUser finds user.
 	FindUser(ctx context.Context, username string) (*model.User, error)
+	// StoreData stores data to database.
+	StoreData(ctx context.Context, creds []model.Creds) error
+	// GetData gets data from database.
+	GetData(ctx context.Context, userID int, site string) (*model.Creds, error)
 	// Close closes the connection to the database.
 	Close() error
 }

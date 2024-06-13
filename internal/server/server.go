@@ -70,27 +70,27 @@ func interceptorLogger(l zerolog.Logger) logging.Logger {
 
 // RegisterGrpcServer registers the gRPC server.
 func RegisterGrpcServer(ctx context.Context, cfg *config.Config, app app.Application) *grpc.Server {
-	as := asrv.NewAuthServer(cfg, app)
-	gs := gsrv.NewGrpcServer(cfg, app)
+	authServer := asrv.NewAuthServer(cfg, app)
+	grpcServer := gsrv.NewGrpcServer(cfg, app)
 
 	logger := zerolog.New(os.Stderr)
 	opts := []logging.Option{logging.WithTimestampFormat(time.RFC3339)}
-	interceptor := auth.NewAuthInterceptor(as.JwtManager)
+	authInterceptor := auth.NewAuthInterceptor(authServer.JwtManager)
 
-	s := grpc.NewServer(
+	server := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
 			logging.UnaryServerInterceptor(interceptorLogger(logger), opts...),
-			grpc.UnaryServerInterceptor(interceptor.Unary()),
+			grpc.UnaryServerInterceptor(authInterceptor.Unary()),
 		),
 		grpc.ChainStreamInterceptor(
 			logging.StreamServerInterceptor(interceptorLogger(logger), opts...),
-			grpc.StreamServerInterceptor(interceptor.Stream()),
+			grpc.StreamServerInterceptor(authInterceptor.Stream()),
 		),
 	)
-	apb.RegisterAuthServiceServer(s, as)
-	gpb.RegisterGophKeeperServiceServer(s, gs)
+	apb.RegisterAuthServiceServer(server, authServer)
+	gpb.RegisterGophKeeperServiceServer(server, grpcServer)
 	log.Info().Msg("gRPC server registered")
-	return s
+	return server
 }
 
 // RunServer starts the server.

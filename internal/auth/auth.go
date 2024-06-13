@@ -24,7 +24,7 @@ type JWTManager struct {
 	tokenDuration time.Duration
 }
 
-// NewJWTManager creates mew JWTManager
+// NewJWTManager creates new JWTManager.
 func NewJWTManager(secretKey string, tokenDuration time.Duration) *JWTManager {
 	return &JWTManager{secretKey, tokenDuration}
 }
@@ -140,7 +140,7 @@ func (interceptor *AuthInterceptor) authorize(ctx context.Context) (context.Cont
 		return nil, status.Errorf(codes.Unauthenticated, "authorization token is not provided")
 	}
 
-	accessToken := values[0]
+	accessToken := strings.TrimPrefix(values[0], "Bearer ")
 	claims, err := interceptor.JwtManager.Verify(accessToken)
 	if err != nil {
 		return nil, status.Errorf(codes.Unauthenticated, "access token is invalid: %v", err)
