@@ -54,7 +54,7 @@ func (s *GrpcServer) StoreData(ctx context.Context, r *pb.StoreDataRequest) (*pb
 		return nil, status.Errorf(codes.Internal, "server store data: %v", err)
 	}
 
-	return &pb.StoreDataResponse{Info: "user data stored"}, nil
+	return &pb.StoreDataResponse{Info: "user data will be stored"}, nil
 }
 
 // GetData gets data.

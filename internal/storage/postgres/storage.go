@@ -6,6 +6,7 @@ import (
 	"embed"
 	"errors"
 	"fmt"
+	"strings"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgerrcode"
@@ -114,9 +115,31 @@ func (s Storage) FindUser(ctx context.Context, username string) (*model.User, er
 
 // StoreData stores data to database.
 func (s Storage) StoreData(ctx context.Context, creds []model.Creds) error {
-	sql := `INSERT INTO creds (user_id, user_site, user_login, user_password, metadata)
-	 		VALUES (:user_id, :user_site, :user_login, :user_password, :metadata)`
-	if _, err := s.db.NamedExecContext(ctx, sql, creds); err != nil {
+	var values []string
+	var args []any
+	for i, cred := range creds {
+		base := i * 5
+		params := fmt.Sprintf("($%d, $%d, $%d, $%d, $%d)", base+1, base+2, base+3, base+4, base+5)
+		values = append(values, params)
+		args = append(args, fmt.Sprint(cred.UserID), cred.Site, cred.Login, cred.Password, cred.Metadata)
+	}
+
+	query := `
+		MERGE INTO creds c
+		USING (
+			SELECT CAST(user_id AS INT) user_id, user_site, user_login, user_password, metadata
+			  FROM (VALUES ` + strings.Join(values, ",\n") + `)
+			    AS v (user_id, user_site, user_login, user_password, metadata)
+		) t ON t.user_id = c.user_id AND t.user_site = c.user_site
+		WHEN MATCHED THEN
+			UPDATE SET user_login = t.user_login, user_password = t.user_password, metadata = t.metadata
+		WHEN NOT MATCHED THEN
+			INSERT (user_id, user_site, user_login, user_password, metadata)
+			VALUES (t.user_id, t.user_site, t.user_login, t.user_password, t.metadata)
+    `
+
+	_, err := s.db.ExecContext(ctx, query, args...)
+	if err != nil {
 		return fmt.Errorf("stogare store data: %w", err)
 	}
 
@@ -126,7 +149,7 @@ func (s Storage) StoreData(ctx context.Context, creds []model.Creds) error {
 // GetData gets data from database.
 func (s Storage) GetData(ctx context.Context, userID int, site string) (*model.Creds, error) {
 	sql := sq.Select("user_login, user_password, metadata").
-		From("creds").Where(sq.Eq{"user_id": userID}, sq.Eq{"site": site})
+		From("creds").Where(sq.Eq{"user_id": userID}).Where(sq.Eq{"user_site": site})
 	rows, err := sql.RunWith(s.db).PlaceholderFormat(sq.Dollar).QueryContext(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("storage get data query: %w", err)
