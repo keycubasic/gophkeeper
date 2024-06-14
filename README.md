@@ -34,3 +34,7 @@ Swagger
 http://localhost:8080/swagger
 ```
 
+Client build
+```shell
+$ go build -o cmd/gkclient/gkclient cmd/gkclient/main.go
+```
