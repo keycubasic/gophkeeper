@@ -11,10 +11,12 @@ import (
 )
 
 type AuthClient struct {
+	Conn   *grpc.ClientConn
 	Client apb.AuthServiceClient
 }
 
 type GophKeeperClient struct {
+	Conn   *grpc.ClientConn
 	Client gpb.GophKeeperServiceClient
 }
 
@@ -23,11 +25,11 @@ func NewAuthClient(ctx context.Context, serverAddress string) *AuthClient {
 	if err != nil {
 		log.Fatal().Err(err)
 	}
-	defer conn.Close()
 
 	log.Info().Msgf("Auth server %s connected", serverAddress)
 
 	return &AuthClient{
+		Conn:   conn,
 		Client: apb.NewAuthServiceClient(conn),
 	}
 }
@@ -37,11 +39,11 @@ func NewGophKeeperClient(ctx context.Context, serverAddress string) *GophKeeperC
 	if err != nil {
 		log.Fatal().Err(err)
 	}
-	defer conn.Close()
 
 	log.Info().Msgf("GophKepeer server %s connected", serverAddress)
 
 	return &GophKeeperClient{
+		Conn:   conn,
 		Client: gpb.NewGophKeeperServiceClient(conn),
 	}
 }

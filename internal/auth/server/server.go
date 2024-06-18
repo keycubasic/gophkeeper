@@ -30,7 +30,7 @@ func NewAuthServer(cfg *config.Config, app app.Application) *AuthServer {
 		cfg: cfg,
 		app: app,
 		JwtManager: auth.NewJWTManager(
-			cfg.JWTSecretKey,
+			cfg.SecretKey,
 			time.Duration(cfg.TokenDuration)*time.Hour,
 		),
 	}

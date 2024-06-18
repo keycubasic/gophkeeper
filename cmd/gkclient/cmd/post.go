@@ -5,9 +5,11 @@ package cmd
 
 import (
 	"context"
+	"errors"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+	"google.golang.org/grpc/metadata"
 
 	"github.com/keycubasic/gophkeeper/cmd/gkclient/internal/client"
 	gpb "github.com/keycubasic/gophkeeper/internal/grpc/proto"
@@ -15,42 +17,46 @@ import (
 
 // postCmd represents the post command
 var postCmd = &cobra.Command{
-	Use:   `post --url "https://ya.ru" --login "login" --pass "password" --meta "metadata"`,
+	Use:   `post --s "https://ya.ru" --l "login" --p "password" --m "metadata"`,
 	Short: "Post user site credentials",
 	Long:  `Post user site credentials.`,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		ctx := context.Background()
-		// TODO: add auth token to context metadata
-		site, err := cmd.Flags().GetString("url")
+
+		token, err := cmd.Flags().GetString("t")
 		if err != nil {
-			log.Error().Err(err)
-			return
+			return err
 		}
 
-		login, err := cmd.Flags().GetString("login")
+		newCtx := metadata.AppendToOutgoingContext(ctx, "authorization", "Bearer "+token)
+
+		site, err := cmd.Flags().GetString("s")
 		if err != nil {
-			log.Error().Err(err)
-			return
+			return err
 		}
 
-		password, err := cmd.Flags().GetString("pass")
+		login, err := cmd.Flags().GetString("l")
 		if err != nil {
-			log.Error().Err(err)
-			return
+			return err
+		}
+
+		password, err := cmd.Flags().GetString("p")
+		if err != nil {
+			return err
 		}
 
 		if site == "" || login == "" || password == "" {
-			log.Error().Msg(ParamErrStr)
-			return
+			return errors.New(ParamErrStr)
 		}
 
-		metadata, err := cmd.Flags().GetString("meta")
+		metadata, err := cmd.Flags().GetString("m")
 		if err != nil {
-			log.Error().Err(err)
-			return
+			return err
 		}
 
-		gkClient := client.NewGophKeeperClient(ctx, ServerAddress)
+		gkClient := client.NewGophKeeperClient(newCtx, ServerAddress)
+		defer gkClient.Conn.Close()
+
 		creds := &gpb.Credentials{Login: login, Password: password}
 		request := &gpb.StoreDataRequest{
 			Site:        site,
@@ -58,22 +64,23 @@ var postCmd = &cobra.Command{
 			Metadata:    metadata,
 		}
 
-		response, err := gkClient.Client.StoreData(ctx, request)
+		response, err := gkClient.Client.StoreData(newCtx, request)
 		if err != nil {
-			log.Error().Err(err)
-			return
+			return err
 		}
 
 		log.Info().Msg(response.Info)
+		return nil
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(postCmd)
 
-	// TODO: add auth token
-	postCmd.PersistentFlags().String("url", "", "Site URL")
-	postCmd.PersistentFlags().String("login", "", "Site login")
-	postCmd.PersistentFlags().String("pass", "", "Site password")
-	postCmd.PersistentFlags().String("meta", "", "Additional metadata")
+	postCmd.Flags().String("t", "", "Access token")
+	postCmd.Flags().String("s", "", "Site URL")
+	postCmd.Flags().String("l", "", "Site login")
+	postCmd.Flags().String("p", "", "Site password")
+	postCmd.MarkFlagsRequiredTogether("t", "s", "l", "p")
+	postCmd.Flags().String("m", "", "Additional metadata")
 }

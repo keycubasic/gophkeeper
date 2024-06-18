@@ -5,6 +5,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 
 	"github.com/keycubasic/gophkeeper/cmd/gkclient/internal/client"
 	apb "github.com/keycubasic/gophkeeper/internal/auth/proto"
@@ -14,43 +15,43 @@ import (
 
 // loginCmd represents the login command
 var loginCmd = &cobra.Command{
-	Use:   `login --u "username" --p "password"`,
+	Use:   `login --u <username> --p <password>`,
 	Short: "Login user",
 	Long:  `Login user with username and password`,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		ctx := context.Background()
 		username, err := cmd.Flags().GetString("u")
 		if err != nil {
-			log.Error().Err(err)
-			return
+			return err
 		}
 
 		password, err := cmd.Flags().GetString("p")
 		if err != nil {
-			log.Error().Err(err)
-			return
+			return err
 		}
 
 		if username == "" || password == "" {
-			log.Error().Msg(ParamErrStr)
-			return
+			return errors.New(ParamErrStr)
 		}
 
 		authClient := client.NewAuthClient(ctx, ServerAddress)
+		defer authClient.Conn.Close()
+
 		user := &apb.User{UserName: username, Password: password}
 		response, err := authClient.Client.LoginUser(ctx, &apb.LoginUserRequest{User: user})
 		if err != nil {
-			log.Error().Err(err)
-			return
+			return err
 		}
 
 		log.Info().Msg(response.AccessToken)
+		return nil
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(loginCmd)
 
-	loginCmd.PersistentFlags().String("u", "", "Username")
-	loginCmd.PersistentFlags().String("p", "", "User password")
+	loginCmd.Flags().String("u", "", "Username")
+	loginCmd.Flags().String("p", "", "User password")
+	loginCmd.MarkFlagsRequiredTogether("u", "p")
 }

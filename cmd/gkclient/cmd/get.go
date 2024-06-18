@@ -6,11 +6,13 @@ package cmd
 import (
 	"context"
 	"encoding/json"
+	"errors"
 
 	"github.com/keycubasic/gophkeeper/cmd/gkclient/internal/client"
 	gpb "github.com/keycubasic/gophkeeper/internal/grpc/proto"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+	"google.golang.org/grpc/metadata"
 )
 
 // getCmd represents the get command
@@ -18,41 +20,48 @@ var getCmd = &cobra.Command{
 	Use:   `get --s "https://ya.ru"`,
 	Short: "Get user site credentials",
 	Long:  `Get user site credentials.`,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		ctx := context.Background()
-		// TODO: add auth token to context metadata
+
+		token, err := cmd.Flags().GetString("t")
+		if err != nil {
+			return err
+		}
+
+		newCtx := metadata.AppendToOutgoingContext(ctx, "authorization", "Bearer "+token)
+
 		site, err := cmd.Flags().GetString("s")
 		if err != nil {
-			log.Error().Err(err)
-			return
+			return err
 		}
 
 		if site == "" {
-			log.Error().Msg(ParamErrStr)
-			return
+			return errors.New(ParamErrStr)
 		}
 
-		gkClient := client.NewGophKeeperClient(ctx, ServerAddress)
+		gkClient := client.NewGophKeeperClient(newCtx, ServerAddress)
+		defer gkClient.Conn.Close()
+
 		request := &gpb.GetDataRequest{Site: site}
-		response, err := gkClient.Client.GetData(ctx, request)
+		response, err := gkClient.Client.GetData(newCtx, request)
 		if err != nil {
-			log.Error().Err(err)
-			return
+			return err
 		}
 
 		res, err := json.Marshal(response)
 		if err != nil {
-			log.Error().Err(err)
-			return
+			return err
 		}
 
 		log.Info().Msg(string(res))
+		return nil
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(getCmd)
 
-	// TODO: add auth token
-	postCmd.PersistentFlags().String("s", "", "Site URL")
+	getCmd.Flags().String("t", "", "Access token")
+	getCmd.Flags().String("s", "", "Site URL")
+	getCmd.MarkFlagsRequiredTogether("t", "s")
 }

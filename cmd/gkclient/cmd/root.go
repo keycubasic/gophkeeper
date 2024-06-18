@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const ParamErrStr = "Insufficient input parameters. For details use --help"
+const ParamErrStr = "insufficient input parameters. For details use --help"
 
 var (
 	ServerAddress string
@@ -32,6 +32,6 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringVar(&ServerAddress, "a", ":8080", "Server address")
-	rootCmd.MarkFlagRequired("a")
+	rootCmd.PersistentFlags().StringVarP(&ServerAddress, "address", "a", ":8080", "Server address")
+	rootCmd.MarkPersistentFlagRequired("a")
 }

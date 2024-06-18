@@ -20,7 +20,7 @@ type Config struct {
 	ServerAddress string `json:"server_address"`
 	LogLevel      string `json:"log_level"`
 	DatabaseDSN   string `json:"database_dsn"`
-	JWTSecretKey  string `json:"jwt_secret_key"`
+	SecretKey     string `json:"jwt_secret_key"`
 	TokenDuration int    `json:"token_diration"`
 	EnableHTTPS   bool   `json:"enable_https"`
 }
@@ -34,7 +34,7 @@ func (cfg *Config) ParseConfig() {
 	flag.StringVar(&cfg.ServerAddress, "a", cfg.ServerAddress, "Server start address")
 	flag.StringVar(&cfg.LogLevel, "l", cfg.LogLevel, "Log level")
 	flag.StringVar(&cfg.DatabaseDSN, "d", cfg.DatabaseDSN, "Database connection string")
-	flag.StringVar(&cfg.JWTSecretKey, "k", cfg.JWTSecretKey, "JWT secret key")
+	flag.StringVar(&cfg.SecretKey, "k", cfg.SecretKey, "JWT secret key")
 	flag.IntVar(&cfg.TokenDuration, "t", cfg.TokenDuration, "JWT token duration (hours)")
 	flag.BoolFunc("s", "Sign of https protocol support", func(s string) error {
 		cfg.EnableHTTPS = true
@@ -56,7 +56,7 @@ func (cfg *Config) ParseConfig() {
 	}
 
 	if k := os.Getenv("GK_JWT_SECRET_KEY"); k != "" {
-		cfg.JWTSecretKey = k
+		cfg.SecretKey = k
 	}
 
 	if _, ok := os.LookupEnv("GK_ENABLE_HTTPS"); ok {

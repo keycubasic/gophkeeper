@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/keycubasic/gophkeeper/internal/config"
+	"github.com/keycubasic/gophkeeper/internal/crypto"
 	"github.com/keycubasic/gophkeeper/internal/model"
 	"github.com/keycubasic/gophkeeper/internal/storage"
 	"github.com/rs/zerolog/log"
@@ -87,7 +88,11 @@ func (app *App) FindUser(ctx context.Context, username string) (*model.User, err
 }
 
 // AppendData stores data.
-func (app *App) AppendData(ctx context.Context, creds model.Creds) error {
+func (app *App) AppendData(ctx context.Context, creds model.Creds) (err error) {
+	creds.Password, err = crypto.Encode(app.cfg.SecretKey, creds.Password)
+	if err != nil {
+		return
+	}
 	app.credsChan <- creds
 	return nil
 }
@@ -128,5 +133,15 @@ func (app *App) storeData(ctx context.Context, creds []model.Creds) {
 
 // GetData gets data.
 func (app *App) GetData(ctx context.Context, userID int, site string) (*model.Creds, error) {
-	return app.db.GetData(ctx, userID, site)
+	creds, err := app.db.GetData(ctx, userID, site)
+	if err != nil {
+		return nil, err
+	}
+
+	creds.Password, err = crypto.Decode(app.cfg.SecretKey, creds.Password)
+	if err != nil {
+		return nil, err
+	}
+
+	return creds, nil
 }

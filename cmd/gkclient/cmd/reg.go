@@ -5,6 +5,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -15,43 +16,43 @@ import (
 
 // regCmd represents the reg command
 var regCmd = &cobra.Command{
-	Use:   `reg --u "username" --p "password"`,
+	Use:   `reg --u <username> --p <password>`,
 	Short: "Register new user",
 	Long:  `Registers new user with username and password`,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		ctx := context.Background()
 		username, err := cmd.Flags().GetString("u")
 		if err != nil {
-			log.Error().Err(err)
-			return
+			return err
 		}
 
 		password, err := cmd.Flags().GetString("p")
 		if err != nil {
-			log.Error().Err(err)
-			return
+			return err
 		}
 
 		if username == "" || password == "" {
-			log.Error().Msg(ParamErrStr)
-			return
+			return errors.New(ParamErrStr)
 		}
 
 		authClient := client.NewAuthClient(ctx, ServerAddress)
+		defer authClient.Conn.Close()
+
 		user := &apb.User{UserName: username, Password: password}
 		response, err := authClient.Client.RegisterUser(ctx, &apb.RegisterUserRequest{User: user})
 		if err != nil {
-			log.Error().Err(err)
-			return
+			return err
 		}
 
 		log.Info().Msg(response.AccessToken)
+		return nil
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(regCmd)
 
-	regCmd.PersistentFlags().String("u", "", "Username")
-	regCmd.PersistentFlags().String("p", "", "User password")
+	regCmd.Flags().String("u", "", "Username")
+	regCmd.Flags().String("p", "", "User password")
+	regCmd.MarkFlagsRequiredTogether("u", "p")
 }
