@@ -6,8 +6,8 @@ package cmd
 import (
 	"context"
 	"errors"
+	"fmt"
 
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
 	"github.com/keycubasic/gophkeeper/cmd/gkclient/internal/client"
@@ -44,7 +44,7 @@ var regCmd = &cobra.Command{
 			return err
 		}
 
-		log.Info().Msg(response.AccessToken)
+		fmt.Println(response.AccessToken)
 		return nil
 	},
 }

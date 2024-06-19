@@ -6,8 +6,8 @@ package cmd
 import (
 	"context"
 	"errors"
+	"fmt"
 
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc/metadata"
 
@@ -69,7 +69,7 @@ var postCmd = &cobra.Command{
 			return err
 		}
 
-		log.Info().Msg(response.Info)
+		fmt.Println(response.Info)
 		return nil
 	},
 }

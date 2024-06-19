@@ -7,10 +7,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 
 	"github.com/keycubasic/gophkeeper/cmd/gkclient/internal/client"
 	gpb "github.com/keycubasic/gophkeeper/internal/grpc/proto"
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc/metadata"
 )
@@ -53,7 +53,7 @@ var getCmd = &cobra.Command{
 			return err
 		}
 
-		log.Info().Msg(string(res))
+		fmt.Println(string(res))
 		return nil
 	},
 }

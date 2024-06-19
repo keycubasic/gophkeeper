@@ -6,10 +6,10 @@ package cmd
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/keycubasic/gophkeeper/cmd/gkclient/internal/client"
 	apb "github.com/keycubasic/gophkeeper/internal/auth/proto"
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
@@ -43,7 +43,7 @@ var loginCmd = &cobra.Command{
 			return err
 		}
 
-		log.Info().Msg(response.AccessToken)
+		fmt.Println(response.AccessToken)
 		return nil
 	},
 }
