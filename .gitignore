@@ -24,3 +24,6 @@ vendor/
 
 .scannerwork
 tmp/
+
+#TLS
+cert/

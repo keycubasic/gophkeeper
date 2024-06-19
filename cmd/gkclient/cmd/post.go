@@ -54,7 +54,7 @@ var postCmd = &cobra.Command{
 			return err
 		}
 
-		gkClient := client.NewGophKeeperClient(newCtx, ServerAddress)
+		gkClient := client.NewGophKeeperClient(newCtx, ServerAddress, EnableTLS)
 		defer gkClient.Conn.Close()
 
 		creds := &gpb.Credentials{Login: login, Password: password}

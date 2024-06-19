@@ -4,5 +4,6 @@
     "database_dsn": "postgres://postgres:1@localhost:5433/gophkeeper_db?sslmode=disable",
     "jwt_secret_key": "keycubasic",
     "token_diration": 8,
-    "enable_https": false
+    "enable_https": false,
+    "enable_tls": false
 }

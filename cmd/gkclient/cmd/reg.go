@@ -35,7 +35,7 @@ var regCmd = &cobra.Command{
 			return errors.New(ParamErrStr)
 		}
 
-		authClient := client.NewAuthClient(ctx, ServerAddress)
+		authClient := client.NewAuthClient(ctx, ServerAddress, EnableTLS)
 		defer authClient.Conn.Close()
 
 		user := &apb.User{UserName: username, Password: password}

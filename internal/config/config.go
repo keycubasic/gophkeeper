@@ -23,6 +23,7 @@ type Config struct {
 	SecretKey     string `json:"jwt_secret_key"`
 	TokenDuration int    `json:"token_diration"`
 	EnableHTTPS   bool   `json:"enable_https"`
+	EnableTLS     bool   `json:"enable_tls"`
 }
 
 // ParseConfig parses the application configuration.

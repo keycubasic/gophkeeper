@@ -13,6 +13,7 @@ const ParamErrStr = "insufficient input parameters. For details use --help"
 
 var (
 	ServerAddress string
+	EnableTLS     bool
 
 	// rootCmd represents the base command when called without any subcommands
 	rootCmd = &cobra.Command{
@@ -33,5 +34,6 @@ func Execute() {
 
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&ServerAddress, "address", "a", ":8080", "Server address")
+	rootCmd.PersistentFlags().BoolVarP(&EnableTLS, "tls", "l", false, "Enable TLS")
 	rootCmd.MarkPersistentFlagRequired("a")
 }

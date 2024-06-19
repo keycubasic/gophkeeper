@@ -39,7 +39,7 @@ var getCmd = &cobra.Command{
 			return errors.New(ParamErrStr)
 		}
 
-		gkClient := client.NewGophKeeperClient(newCtx, ServerAddress)
+		gkClient := client.NewGophKeeperClient(newCtx, ServerAddress, EnableTLS)
 		defer gkClient.Conn.Close()
 
 		request := &gpb.GetDataRequest{Site: site}

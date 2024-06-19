@@ -3,7 +3,10 @@ package server
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"embed"
+	"fmt"
 	"net/http"
 	"os"
 	"strings"
@@ -22,7 +25,9 @@ import (
 	"golang.org/x/net/http2/h2c"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/reflection"
 
 	"github.com/keycubasic/gophkeeper/internal/auth"
 	apb "github.com/keycubasic/gophkeeper/internal/auth/proto"
@@ -31,11 +36,22 @@ import (
 	gsrv "github.com/keycubasic/gophkeeper/internal/grpc/server"
 )
 
-//go:embed swagger/*
-var swaggerJSONPath embed.FS
+var (
+	//go:embed swagger/*
+	swaggerJSONPath embed.FS
 
-//go:embed hosts/whitelist
-var embedWhitelist string
+	//go:embed hosts/whitelist
+	embedWhitelist string
+
+	//go:embed cert/ca-cert.pem
+	clientCACert []byte
+
+	//go:embed cert/server-cert.pem
+	certFile []byte
+
+	//go:embed cert/server-key.pem
+	keyFile []byte
+)
 
 // httpGrpcRouter separates HTTP and gRPC calls.
 func httpGrpcRouter(gsrv *grpc.Server, hsvr http.Handler) http.Handler {
@@ -68,6 +84,29 @@ func interceptorLogger(l zerolog.Logger) logging.Logger {
 	})
 }
 
+func loadTLSCredentials() (credentials.TransportCredentials, error) {
+	// Load certificate of the CA who signed client's certificate
+	certPool := x509.NewCertPool()
+	if !certPool.AppendCertsFromPEM(clientCACert) {
+		return nil, fmt.Errorf("failed to add client CA's certificate")
+	}
+
+	// Load server's certificate and private key
+	serverCert, err := tls.X509KeyPair(certFile, keyFile)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create the credentials and return it
+	config := &tls.Config{
+		Certificates: []tls.Certificate{serverCert},
+		ClientAuth:   tls.RequireAndVerifyClientCert,
+		ClientCAs:    certPool,
+	}
+
+	return credentials.NewTLS(config), nil
+}
+
 // RegisterGrpcServer registers the gRPC server.
 func RegisterGrpcServer(ctx context.Context, cfg *config.Config, app app.Application) *grpc.Server {
 	authServer := asrv.NewAuthServer(cfg, app)
@@ -77,7 +116,7 @@ func RegisterGrpcServer(ctx context.Context, cfg *config.Config, app app.Applica
 	opts := []logging.Option{logging.WithTimestampFormat(time.RFC3339)}
 	authInterceptor := auth.NewAuthInterceptor(authServer.JwtManager)
 
-	server := grpc.NewServer(
+	serverOptions := []grpc.ServerOption{
 		grpc.ChainUnaryInterceptor(
 			logging.UnaryServerInterceptor(interceptorLogger(logger), opts...),
 			grpc.UnaryServerInterceptor(authInterceptor.Unary()),
@@ -86,9 +125,20 @@ func RegisterGrpcServer(ctx context.Context, cfg *config.Config, app app.Applica
 			logging.StreamServerInterceptor(interceptorLogger(logger), opts...),
 			grpc.StreamServerInterceptor(authInterceptor.Stream()),
 		),
-	)
+	}
+
+	if cfg.EnableTLS {
+		tlsCredentials, err := loadTLSCredentials()
+		if err != nil {
+			log.Fatal().Msgf("cannot load TLS credentials: %v", err)
+		}
+		serverOptions = append(serverOptions, grpc.Creds(tlsCredentials))
+	}
+
+	server := grpc.NewServer(serverOptions...)
 	apb.RegisterAuthServiceServer(server, authServer)
 	gpb.RegisterGophKeeperServiceServer(server, grpcServer)
+	reflection.Register(server)
 	log.Info().Msg("gRPC server registered")
 	return server
 }
