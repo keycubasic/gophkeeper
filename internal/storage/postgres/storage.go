@@ -148,7 +148,7 @@ func (s Storage) StoreData(ctx context.Context, creds []model.Creds) error {
 
 // GetData gets data from database.
 func (s Storage) GetData(ctx context.Context, userID int, site string) (*model.Creds, error) {
-	sql := sq.Select("user_login, user_password, metadata").
+	sql := sq.Select("cred_id, user_login, user_password, metadata").
 		From("creds").Where(sq.Eq{"user_id": userID}).Where(sq.Eq{"user_site": site})
 	rows, err := sql.RunWith(s.db).PlaceholderFormat(sq.Dollar).QueryContext(ctx)
 	if err != nil {
@@ -157,7 +157,7 @@ func (s Storage) GetData(ctx context.Context, userID int, site string) (*model.C
 
 	creds := new(model.Creds)
 	for rows.Next() {
-		err := rows.Scan(&creds.Login, &creds.Password, &creds.Metadata)
+		err := rows.Scan(&creds.ID, &creds.Login, &creds.Password, &creds.Metadata)
 		if err != nil {
 			return nil, fmt.Errorf("storage get data scan row: %w", err)
 		}

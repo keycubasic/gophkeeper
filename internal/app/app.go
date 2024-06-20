@@ -3,6 +3,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -98,7 +99,7 @@ func (app *App) AppendData(ctx context.Context, creds model.Creds) (err error) {
 }
 
 func (app *App) processData(ctx context.Context) {
-	ticker := time.NewTicker(10 * time.Second)
+	ticker := time.NewTicker(1 * time.Second)
 	creds := make([]model.Creds, 0, 256)
 
 	for {
@@ -136,6 +137,10 @@ func (app *App) GetData(ctx context.Context, userID int, site string) (*model.Cr
 	creds, err := app.db.GetData(ctx, userID, site)
 	if err != nil {
 		return nil, err
+	}
+
+	if creds.ID == 0 {
+		return nil, fmt.Errorf("app get data: %w", errors.New("creds not found"))
 	}
 
 	creds.Password, err = crypto.Decode(app.cfg.SecretKey, creds.Password)

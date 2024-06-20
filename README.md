@@ -41,7 +41,7 @@ http://localhost:8080/swagger
 $ go build -o cmd/gkclient/gkclient cmd/gkclient/main.go
 ```
 
-### Client Usage:
+### Client Usage
 Register User
 ```sh
 $ cmd/gkclient/gkclient reg --u <username> --p <password>
