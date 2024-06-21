@@ -43,13 +43,13 @@ var (
 	//go:embed hosts/whitelist
 	embedWhitelist string
 
-	//go:embed cert/ca-cert.pem
+	// go:embed cert/ca-cert.pem
 	clientCACert []byte
 
-	//go:embed cert/server-cert.pem
+	// go:embed cert/server-cert.pem
 	certFile []byte
 
-	//go:embed cert/server-key.pem
+	// go:embed cert/server-key.pem
 	keyFile []byte
 )
 

@@ -17,13 +17,13 @@ import (
 )
 
 var (
-	//go:embed cert/ca-cert.pem
+	// go:embed cert/ca-cert.pem
 	pemServerCA []byte
 
-	//go:embed cert/client-cert.pem
+	// go:embed cert/client-cert.pem
 	certFile []byte
 
-	//go:embed cert/client-key.pem
+	// go:embed cert/client-key.pem
 	keyFile []byte
 )
 
