@@ -1,3 +1,4 @@
+// Package client contains auth and data clients description.
 package client
 
 import (
@@ -26,11 +27,13 @@ var (
 	keyFile []byte
 )
 
+// AuthClient stores auth client.
 type AuthClient struct {
 	Conn   *grpc.ClientConn
 	Client apb.AuthServiceClient
 }
 
+// GophKeeperClient stores data client.
 type GophKeeperClient struct {
 	Conn   *grpc.ClientConn
 	Client gpb.GophKeeperServiceClient
@@ -57,6 +60,7 @@ func loadTLSCredentials() (credentials.TransportCredentials, error) {
 	return credentials.NewTLS(config), nil
 }
 
+// NewAuthClient creates new auth client.
 func NewAuthClient(ctx context.Context, serverAddress string, enableTLS bool) *AuthClient {
 	transportOption := grpc.WithTransportCredentials(insecure.NewCredentials())
 	if enableTLS {
@@ -80,6 +84,7 @@ func NewAuthClient(ctx context.Context, serverAddress string, enableTLS bool) *A
 	}
 }
 
+// NewGophKeeperClient creates new data client.
 func NewGophKeeperClient(ctx context.Context, serverAddress string, enableTLS bool) *GophKeeperClient {
 	transportOption := grpc.WithTransportCredentials(insecure.NewCredentials())
 	if enableTLS {

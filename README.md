@@ -29,8 +29,17 @@ Middleware problem. You may have to force the resource to be registered in go.mo
 require github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.1.0
 ```
 
-Swagger
+## Documentation
+---
+### Docs
 ```
+godoc -http=:8080
+```
+http://localhost:8080/pkg/github.com/keycubasic/gophkeeper/?m=all
+
+### Swagger
+```
+godoc -http=:8080
 http://localhost:8080/swagger
 ```
 

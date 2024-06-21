@@ -1,3 +1,4 @@
+// Package crypto contains cryptographic functions.
 package crypto
 
 import (

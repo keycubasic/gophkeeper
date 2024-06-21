@@ -1,4 +1,4 @@
-// Main package of application
+// Main package of application.
 package main
 
 import (

@@ -1,4 +1,4 @@
-// Package testhelpers provides help function for container testing.
+// Package testhelpers provides help function for testing.
 package testhelpers
 
 import (
