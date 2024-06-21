@@ -50,6 +50,7 @@ func (suite *GophKeeperTestSuite) SetupSuite() {
 	app := app.NewApp(suite.ctx, cfg, db)
 	gsrv := RegisterGrpcServer(suite.ctx, cfg, app)
 	go RunServer(suite.ctx, cfg, gsrv)
+	time.Sleep(1 * time.Second) // wait for server runs to pass tests
 }
 
 func (suite *GophKeeperTestSuite) TearDownSuite() {
