@@ -27,5 +27,4 @@ protoc -I . ^
     --openapiv2_opt logtostderr=true ^
     cmd/proto/gophkeeper.proto
 
-
-go-swagger-merger -o internal/server/swagger/swagger.json  cmd/proto/auth.swagger.json cmd/proto/gophkeeper.swagger.json 
+go-swagger-merger -o internal/server/swagger/swagger.json  cmd/proto/auth.swagger.json cmd/proto/gophkeeper.swagger.json

@@ -39,7 +39,6 @@ http://localhost:8080/pkg/github.com/keycubasic/gophkeeper/?m=all
 
 ### Swagger
 ```
-godoc -http=:8080
 http://localhost:8080/swagger
 ```
 
