@@ -21,7 +21,6 @@ func main() {
 
 	cfg := new(config.Config)
 	cfg.ParseConfig()
-
 	db, err := postgres.NewStorage(ctx, cfg)
 	if err != nil {
 		log.Fatal().Err(err)
