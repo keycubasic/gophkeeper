@@ -1,0 +1,196 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "GophKeeper Password Manager",
+    "version": "1.0",
+    "contact": {
+      "name": "keycubasic",
+      "url": "https://github.com/keycubasic",
+      "email": "keycube@yandex.ru"
+    }
+  },
+  "tags": [
+    {
+      "name": "GophKeeperService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/ping": {
+      "get": {
+        "operationId": "GophKeeperService_Ping",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gophkeeperPingResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "GophKeeperService"
+        ]
+      }
+    },
+    "/api/user/data": {
+      "get": {
+        "operationId": "GophKeeperService_GetData",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gophkeeperGetDataResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "site",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "GophKeeperService"
+        ]
+      },
+      "post": {
+        "operationId": "GophKeeperService_StoreData",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/gophkeeperStoreDataResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/gophkeeperStoreDataRequest"
+            }
+          }
+        ],
+        "tags": [
+          "GophKeeperService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "gophkeeperCredentials": {
+      "type": "object",
+      "properties": {
+        "login": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      }
+    },
+    "gophkeeperGetDataResponse": {
+      "type": "object",
+      "properties": {
+        "credentials": {
+          "$ref": "#/definitions/gophkeeperCredentials"
+        },
+        "metadata": {
+          "type": "string"
+        }
+      }
+    },
+    "gophkeeperPingResponse": {
+      "type": "object"
+    },
+    "gophkeeperStoreDataRequest": {
+      "type": "object",
+      "properties": {
+        "site": {
+          "type": "string"
+        },
+        "credentials": {
+          "$ref": "#/definitions/gophkeeperCredentials"
+        },
+        "metadata": {
+          "type": "string"
+        }
+      }
+    },
+    "gophkeeperStoreDataResponse": {
+      "type": "object",
+      "properties": {
+        "info": {
+          "type": "string"
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    }
+  },
+  "securityDefinitions": {
+    "bearer": {
+      "type": "apiKey",
+      "description": "Authentication token, prefixed by Bearer: Bearer \u003ctoken\u003e",
+      "name": "Authorization",
+      "in": "header"
+    }
+  },
+  "security": [
+    {
+      "bearer": []
+    }
+  ]
+}
