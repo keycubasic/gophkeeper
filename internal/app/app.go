@@ -118,17 +118,17 @@ func (app *App) processData(ctx context.Context) {
 		case cred := <-app.credsChan:
 			creds = append(creds, cred)
 		case <-ticker.C:
-			if len(creds) > 0 {
-				app.storeData(ctx, creds)
-				creds = nil
-			}
+			app.storeData(ctx, creds)
+			creds = nil
 		}
 	}
 }
 
 func (app *App) storeData(ctx context.Context, creds []model.Creds) {
-	if err := app.db.StoreData(ctx, creds); err != nil {
-		log.Warn().Msg(err.Error())
+	if len(creds) > 0 {
+		if err := app.db.StoreData(ctx, creds); err != nil {
+			log.Warn().Msg(err.Error())
+		}
 	}
 }
 
